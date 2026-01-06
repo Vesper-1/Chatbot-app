@@ -1,0 +1,168 @@
+<!--
+=============================================================================
+LOGIN PAGE - CLASSROOM DEMO
+=============================================================================
+This page handles both login and registration in one form.
+
+How it works:
+1. User enters username and password
+2. Form submits to /login via POST request
+3. Server checks if user exists:
+   - If exists and password matches: Log in
+   - If doesn't exist: Create new account and log in
+   - If exists but password wrong: Show error
+
+No JavaScript needed - just HTML forms!
+=============================================================================
+-->
+
+<!-- Extend the base template (inherit header, CSS, etc.) -->
+{% extends "base.html" %}
+
+<!-- Set the page title -->
+{% block title %}Login - AI Chat App{% endblock %}
+
+<!-- Main content for this page -->
+{% block content %}
+
+<div style="max-width: 400px; margin: 0 auto;">
+
+    <!--
+    =============================================================================
+    PAGE HEADER
+    =============================================================================
+    -->
+    <div style="text-align: center; margin-bottom: 30px;">
+        <h2 style="font-size: 28px; color: #333; margin-bottom: 10px;">
+            🤖 Welcome to AI Chat
+        </h2>
+        <p style="color: #6c757d; font-size: 14px;">
+            Enter your credentials to continue
+        </p>
+    </div>
+
+    <!--
+    =============================================================================
+    LOGIN/REGISTER FORM
+    =============================================================================
+    Key attributes:
+    - method="POST": Send data via POST request (secure, data not in URL)
+    - action="{{ url_for('login') }}": Submit to /login route
+    =============================================================================
+    -->
+    <form method="POST" action="{{ url_for('login') }}">
+
+        <!--
+        USERNAME INPUT
+        =============================================================================
+        - name="username": This is how we access the value in Python (request.form['username'])
+        - required: HTML5 validation - browser won't submit if empty
+        - placeholder: Hint text shown in empty field
+        =============================================================================
+        -->
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input
+                type="text"
+                id="username"
+                name="username"
+                placeholder="Enter your username"
+                required
+                autocomplete="username"
+            >
+        </div>
+
+        <!--
+        PASSWORD INPUT
+        =============================================================================
+        - type="password": Hides the characters as you type (shows dots)
+        - name="password": Access via request.form['password'] in Python
+        =============================================================================
+        -->
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Enter your password"
+                required
+                autocomplete="current-password"
+            >
+        </div>
+
+        <!--
+        SUBMIT BUTTON
+        =============================================================================
+        - type="submit": Clicking this submits the form
+        - When clicked:
+          1. Browser collects all input values
+          2. Sends POST request to /login
+          3. Server processes login/registration
+          4. Server sends back response (redirect or error)
+          5. Browser displays the result
+        =============================================================================
+        -->
+        <button type="submit" class="btn">
+            Login / Register
+        </button>
+
+    </form>
+
+    <!--
+    =============================================================================
+    INFORMATIONAL TEXT
+    =============================================================================
+    -->
+    <div style="margin-top: 20px; padding: 15px; background: #f8f9fa; border-radius: 6px; font-size: 13px; color: #6c757d;">
+        <strong>ℹ️ How it works:</strong>
+        <ul style="margin: 10px 0 0 20px; line-height: 1.6;">
+            <li>If your username exists and password matches, you'll be logged in.</li>
+            <li>If your username doesn't exist, a new account will be created automatically.</li>
+            <li>Passwords are stored in plain text (for demo purposes only!).</li>
+        </ul>
+    </div>
+
+    <!--
+    =============================================================================
+    EDUCATIONAL NOTE
+    =============================================================================
+    -->
+    <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 6px; font-size: 12px; color: #856404; border-left: 4px solid #ffc107;">
+        <strong>⚠️ Educational Demo Only</strong><br>
+        This app uses simplified security for teaching purposes. Never use plain text passwords in production!
+    </div>
+
+</div>
+
+<!--
+=============================================================================
+HOW THIS PAGE WORKS (BEHIND THE SCENES)
+=============================================================================
+
+1. USER VISITS /login:
+   - Browser sends GET request
+   - Flask's login() function handles it
+   - Renders this template (login.html)
+   - Browser displays the form
+
+2. USER SUBMITS FORM:
+   - Browser sends POST request to /login
+   - Request includes form data: {username: "...", password: "..."}
+   - Flask's login() function handles it
+   - Checks database, creates user if needed
+   - Sets session cookie to remember user
+   - Redirects to /chat
+
+3. BROWSER FOLLOWS REDIRECT:
+   - Browser goes to /chat automatically
+   - Flask's chat() function handles it
+   - Renders chat.html
+   - Browser displays chat interface
+
+All of this happens WITHOUT JavaScript!
+The browser handles forms natively.
+=============================================================================
+-->
+
+{% endblock %}

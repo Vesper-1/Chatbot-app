@@ -1,0 +1,333 @@
+<!--
+=============================================================================
+CHAT PAGE - CLASSROOM DEMO
+=============================================================================
+This is the main chat interface where users interact with AI models.
+
+Features:
+1. Displays all previous messages (chat history)
+2. Form to send new messages
+3. Dropdown to select AI model (OpenAI, Gemini, DeepSeek)
+4. Button to clear chat history
+
+How it works WITHOUT JavaScript:
+1. Page loads with all messages from database
+2. User types message and selects model
+3. Form submits via POST request
+4. Server gets AI response and saves to database
+5. Server redirects back to /chat
+6. Page reloads with new messages included
+
+This is "Server-Side Rendering" - the server does all the work!
+=============================================================================
+-->
+
+<!-- Extend the base template -->
+{% extends "base.html" %}
+
+<!-- Set the page title -->
+{% block title %}Chat - AI Chat App{% endblock %}
+
+<!-- Main content -->
+{% block content %}
+
+<!--
+=============================================================================
+CHAT CONTAINER - Fixed height with scrollable messages
+=============================================================================
+-->
+<div class="chat-container">
+
+    <!--
+    =============================================================================
+    MESSAGES AREA - Displays chat history
+    =============================================================================
+    This section shows all previous messages in a scrollable area
+    =============================================================================
+    -->
+    <div class="chat-messages" id="messages">
+
+        <!--
+        =============================================================================
+        EMPTY STATE - Shown when no messages yet
+        =============================================================================
+        Jinja2 syntax:
+        - {% if condition %}: If statement
+        - chat_history is a list passed from Flask
+        - |length is a Jinja2 filter that gets the length of a list
+        =============================================================================
+        -->
+        {% if chat_history|length == 0 %}
+            <div class="empty-state">
+                <h2>👋 Welcome!</h2>
+                <p>Start a conversation with AI by typing a message below.</p>
+                <p style="margin-top: 10px;">Choose from OpenAI GPT, Google Gemini, or DeepSeek models.</p>
+            </div>
+
+        <!--
+        =============================================================================
+        MESSAGE HISTORY - Loop through all messages
+        =============================================================================
+        Jinja2 syntax:
+        - {% for item in list %}: Loop through a list
+        - {{ variable }}: Output a variable
+        - {% endfor %}: End the loop
+
+        Each message has:
+        - role: 'user' or 'assistant'
+        - content: The actual message text
+        - model: Which AI model was used
+        - timestamp: When the message was sent
+        =============================================================================
+        -->
+        {% else %}
+            {% for message in chat_history %}
+
+                <!--
+                MESSAGE BUBBLE
+                =============================================================================
+                - class="message {{ message.role }}": Dynamic class based on role
+                  If role is 'user', class becomes "message user" (blue, right side)
+                  If role is 'assistant', class becomes "message assistant" (white, left side)
+                =============================================================================
+                -->
+                <div class="message {{ message.role }}">
+
+                    <!--
+                    MESSAGE CONTENT
+                    =============================================================================
+                    - {{ message.content }}: The actual message text
+                    - Uses |safe filter to preserve line breaks and formatting
+                      (Be careful with |safe - only use with trusted content!)
+                    =============================================================================
+                    -->
+                    <div class="message-content">
+                        {{ message.content }}
+                    </div>
+
+                    <!--
+                    MESSAGE METADATA
+                    =============================================================================
+                    Shows timestamp and model used
+                    - Different format for user vs assistant messages
+                    =============================================================================
+                    -->
+                    <div class="message-meta">
+                        {% if message.role == 'user' %}
+                            <!-- User message metadata -->
+                            You • {{ message.timestamp[:16] }}
+                            <!-- [:16] slices the string to show only date and time, not seconds -->
+                        {% else %}
+                            <!-- Assistant message metadata -->
+                            🤖 {{ message.model|upper }} • {{ message.timestamp[:16] }}
+                            <!-- |upper converts model name to uppercase -->
+                        {% endif %}
+                    </div>
+
+                </div>
+
+            {% endfor %}
+            <!-- End of message loop -->
+
+        {% endif %}
+        <!-- End of if/else for empty state -->
+
+    </div>
+    <!-- End of messages area -->
+
+    <!--
+    =============================================================================
+    CHAT INPUT FORM - Send new messages
+    =============================================================================
+    This form allows users to:
+    1. Select an AI model from dropdown
+    2. Type a message
+    3. Submit to get a response
+    =============================================================================
+    -->
+    <form method="POST" action="{{ url_for('chat') }}" class="chat-input-form">
+
+        <!--
+        MODEL SELECTOR
+        =============================================================================
+        Dropdown menu to choose which AI to use
+        - name="model": Access via request.form['model'] in Python
+        - required: Must select an option
+        =============================================================================
+        -->
+        <div class="form-group model-select">
+            <label for="model">AI Model</label>
+            <select id="model" name="model" required>
+                <!--
+                <option value="...">: Each option in the dropdown
+                - value: What gets sent to the server
+                - Text between tags: What the user sees
+                - selected: Which option is pre-selected
+                -->
+                <option value="openai" selected>🟢 OpenAI GPT</option>
+                <option value="gemini">🔵 Google Gemini</option>
+                <option value="deepseek">🟣 DeepSeek</option>
+            </select>
+        </div>
+
+        <!--
+        MESSAGE INPUT
+        =============================================================================
+        Text area for typing the message
+        - <textarea> allows multiple lines (unlike <input>)
+        - rows="2": Start with 2 rows high
+        - name="message": Access via request.form['message'] in Python
+        =============================================================================
+        -->
+        <div class="form-group message-input">
+            <label for="message">Your Message</label>
+            <textarea
+                id="message"
+                name="message"
+                rows="2"
+                placeholder="Type your message here..."
+                required
+            ></textarea>
+        </div>
+
+        <!--
+        SEND BUTTON
+        =============================================================================
+        When clicked:
+        1. Browser collects form data (model + message)
+        2. Sends POST request to /chat
+        3. Server processes message, calls AI API
+        4. Server saves response to database
+        5. Server redirects back to /chat
+        6. Page reloads with new messages
+        =============================================================================
+        -->
+        <button type="submit" class="btn">
+            Send 📤
+        </button>
+
+    </form>
+    <!-- End of input form -->
+
+</div>
+<!-- End of chat container -->
+
+<!--
+=============================================================================
+CLEAR CHAT BUTTON
+=============================================================================
+Allows users to delete all their chat history
+=============================================================================
+-->
+<div style="margin-top: 20px; text-align: center;">
+    <form method="POST" action="{{ url_for('clear_chat') }}" style="display: inline;">
+        <!--
+        CONFIRMATION
+        =============================================================================
+        onclick="return confirm('...')": JavaScript confirmation dialog
+        - This is the ONLY JavaScript in the entire app!
+        - If user clicks "Cancel", returns false and form doesn't submit
+        - If user clicks "OK", returns true and form submits
+        =============================================================================
+        -->
+        <button
+            type="submit"
+            class="btn-secondary"
+            onclick="return confirm('Are you sure you want to clear all chat history? This cannot be undone.');"
+        >
+            🗑️ Clear Chat History
+        </button>
+    </form>
+</div>
+
+<!--
+=============================================================================
+AUTO-SCROLL TO BOTTOM (using HTML anchor)
+=============================================================================
+This is a clever trick to scroll to the bottom without JavaScript!
+1. We put an anchor at the end of messages
+2. We set the URL hash to this anchor
+3. Browser automatically scrolls to it
+
+However, for simplicity, we'll skip this and let users scroll manually.
+If you want auto-scroll, you'd need a tiny bit of JavaScript or a meta refresh.
+=============================================================================
+-->
+
+<!--
+=============================================================================
+HOW THE CHAT FLOW WORKS
+=============================================================================
+
+SCENARIO: User sends "Hello" to OpenAI model
+
+1. USER TYPES MESSAGE:
+   - Types "Hello" in textarea
+   - Selects "OpenAI GPT" from dropdown
+   - Clicks "Send" button
+
+2. BROWSER SUBMITS FORM:
+   - POST request to /chat
+   - Body: {message: "Hello", model: "openai"}
+
+3. SERVER PROCESSES (app.py):
+   a. Receives POST request
+   b. Extracts message and model from form
+   c. Loads user's chat history from database
+   d. Saves user's message to database
+   e. Calls call_openai_gpt() function
+   f. OpenAI API returns response
+   g. Saves AI response to database
+   h. Redirects browser to /chat (GET)
+
+4. BROWSER FOLLOWS REDIRECT:
+   - GET request to /chat
+   - Server loads all messages including new ones
+   - Renders this template with updated chat_history
+   - Browser displays page with new messages
+
+5. USER SEES RESPONSE:
+   - Page has reloaded
+   - New user message appears (blue, right side)
+   - New AI response appears (white, left side)
+   - Ready to send another message
+
+ALL WITHOUT JAVASCRIPT!
+(Except the confirmation dialog, which is optional)
+=============================================================================
+-->
+
+<!--
+=============================================================================
+EDUCATIONAL NOTES
+=============================================================================
+
+Why this approach works for a classroom demo:
+
+PROS:
+✅ Simple to understand - no complex JavaScript
+✅ Works on any browser, even very old ones
+✅ Easy to debug - just look at HTML source
+✅ Server has full control - good for learning backend
+✅ No build tools needed (webpack, etc.)
+✅ SEO-friendly (if that mattered for a chat app)
+
+CONS:
+❌ Page reloads on every message (not as smooth)
+❌ No real-time typing indicators
+❌ Can't see AI typing in real-time
+❌ Higher server load (full page render each time)
+❌ Scroll position resets on reload
+❌ No offline functionality
+
+For production, you'd typically use:
+- JavaScript fetch() or axios for AJAX requests
+- WebSockets for real-time communication
+- React/Vue for smooth UI updates
+- Local state management to avoid page reloads
+
+But for learning the fundamentals, this server-side approach is perfect!
+=============================================================================
+-->
+
+{% endblock %}
