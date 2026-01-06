@@ -1,0 +1,14 @@
+# Flask - Web framework for building the application
+Flask==3.0.0
+
+# Python-dotenv - Load environment variables from .env file
+python-dotenv==1.0.0
+
+# Requests - Make HTTP requests to AI provider APIs
+requests==2.31.0
+
+# OpenAI - Official Python client for OpenAI/GPT APIs
+openai==1.12.0
+
+# Google Generative AI - Official Python client for Gemini
+google-generativeai==0.3.2

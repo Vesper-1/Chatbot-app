@@ -1,0 +1,75 @@
+# =============================================================================
+# GITIGNORE - Files that should NOT be committed to Git
+# =============================================================================
+
+# Environment variables (contains API keys - NEVER commit this!)
+.env
+
+# Database file (contains user data)
+*.db
+chat_app.db
+
+# Python bytecode files (auto-generated)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Virtual environment directories
+venv/
+env/
+ENV/
+.venv
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Flask stuff
+instance/
+.webassets-cache
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
